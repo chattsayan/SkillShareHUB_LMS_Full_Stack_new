@@ -1,5 +1,6 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
+import "dotenv/config";
 
 export const clerkWebhooks = async (req, res) => {
   try {
@@ -23,22 +24,28 @@ export const clerkWebhooks = async (req, res) => {
     switch (type) {
       case "user.created":
         await User.create(userData);
-        res.JSON({});
+        res.json({ message: "User created successfully" });
         break;
       case "user.updated":
         await User.findByIdAndUpdate(data.id, userData);
-        res.JSON({});
+        res.json({ message: "User updated successfully" });
         break;
       case "user.deleted":
         await User.findByIdAndDelete(data.id);
-        res.JSON({});
+        res.json({ message: "User deleted successfully" });
         break;
       default:
         console.warn("Unhandled event type:", type);
         res.status(400).json({ message: "Unhandled event type" });
     }
   } catch (error) {
-    console.error("Error in clerkWebhooks:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+    });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
