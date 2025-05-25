@@ -1,0 +1,23 @@
+{
+  "courseTitle": "Introduction to Programming",
+  "courseDescription": "test description",
+  "coursePrice": 50,
+  "discount": 10,
+  "courseContent": [
+    {
+      "chapterId": "ch01",
+      "chapterOrder": 1,
+      "chapterTitle": "Getting Started with Programming",
+      "chapterContent": [
+        {
+          "lectureId": "l01",
+          "lectureTitle": "What is Programming?",
+          "lectureDuration": 5,
+          "lectureUrl": "https://example.com/lecture1",
+          "isPreviewFree": true,
+          "lectureOrder": 1
+        }
+      ]
+    }
+  ]
+}
