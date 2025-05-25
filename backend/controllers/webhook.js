@@ -50,7 +50,7 @@ export const clerkWebhooks = async (req, res) => {
       stack: error.stack,
       body: req.body,
     });
-    return res.status(500).json({
+    res.json({
       message: "Internal Server Error",
       error: error.message,
     });
