@@ -3,15 +3,22 @@ import "dotenv/config";
 import cors from "cors";
 import connectDB from "./config/database.js";
 import { clerkWebhooks } from "./controllers/webhook.js";
+import { clerkMiddleware } from "@clerk/express";
+
+// Routers
+import educatorRouter from "./routes/educatorRoutes.js";
+import connectCloudinary from "./config/cloudinary.js";
 
 const app = express();
 
 // Middlewares
 app.use(cors());
+app.use(clerkMiddleware());
 
 // Routes
 app.get("/", (req, res) => res.send("API working"));
 app.post("/clerk", express.json(), clerkWebhooks);
+app.use("/api/educator", express.json(), educatorRouter);
 
 // PORT
 const PORT = process.env.PORT || 5000;
@@ -29,3 +36,5 @@ connectDB()
   .catch((err) => {
     console.error("DB Connection Failed: ", err);
   });
+
+await connectCloudinary();
