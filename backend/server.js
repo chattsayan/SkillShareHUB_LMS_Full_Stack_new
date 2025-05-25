@@ -7,7 +7,12 @@ import { clerkWebhooks } from "./controllers/webhook.js";
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: true
+  // methods: ['GET', 'POST'],
+  // allowedHeaders: ['Content-Type', 'svix-id', 'svix-timestamp', 'svix-signature']
+}));
 
 // Routes
 app.get("/", (req, res) => res.send("API working"));

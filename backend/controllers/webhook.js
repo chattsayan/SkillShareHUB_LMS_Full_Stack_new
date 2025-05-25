@@ -4,6 +4,11 @@ import "dotenv/config";
 
 export const clerkWebhooks = async (req, res) => {
   try {
+    console.log("Webhook received:", {
+      headers: req.headers,
+      body: req.body
+    });
+
     const webHook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
     await webHook.verify(JSON.stringify(req.body), {
@@ -13,6 +18,8 @@ export const clerkWebhooks = async (req, res) => {
     });
 
     const { data, type } = req.body;
+    console.log("Webhook type:", type);
+    console.log("User data:", data);
 
     const userData = {
       _id: data.id,
@@ -21,10 +28,14 @@ export const clerkWebhooks = async (req, res) => {
       imageUrl: data.image_url,
     };
 
+    console.log("Processed user data:", userData);
+
     switch (type) {
       case "user.created":
-        await User.create(userData);
-        res.json({ message: "User created successfully" });
+        console.log("Creating new user...");
+        const newUser = await User.create(userData);
+        console.log("User created:", newUser);
+        res.json({ message: "User created successfully", user: newUser });
         break;
       case "user.updated":
         await User.findByIdAndUpdate(data.id, userData);
