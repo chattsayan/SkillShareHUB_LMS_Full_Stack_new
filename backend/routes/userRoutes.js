@@ -13,11 +13,12 @@ const userRouter = express.Router();
 
 // Protected routes
 userRouter.get("/data", ClerkExpressRequireAuth(), getUserData);
-userRouter.get("/enrolled-courses", userEnrolledCourses);
+userRouter.get("/enrolled-courses", ClerkExpressRequireAuth(), userEnrolledCourses);
 userRouter.post("/purchase", ClerkExpressRequireAuth(), purchaseCourse);
 
-userRouter.post("/update-course-progress", updateUserCourseProgress);
-userRouter.post("/get-course-progress", getUserCourseProgress);
-userRouter.post("/add-rating", addUserRating);
+// Course progress and rating routes
+userRouter.post("/update-course-progress", ClerkExpressRequireAuth(), updateUserCourseProgress);
+userRouter.get("/course-progress/:courseId", ClerkExpressRequireAuth(), getUserCourseProgress);
+userRouter.post("/add-rating", ClerkExpressRequireAuth(), addUserRating);
 
 export default userRouter;

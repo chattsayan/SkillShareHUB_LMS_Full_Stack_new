@@ -2,7 +2,7 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import connectDB from "./config/database.js";
-import { clerkWebhooks } from "./controllers/webhook.js";
+import { clerkWebhooks, stripeWebhooks } from "./controllers/webhook.js";
 import { clerkMiddleware } from "@clerk/express";
 
 // Routers
@@ -10,7 +10,6 @@ import educatorRouter from "./routes/educatorRoutes.js";
 import courseRouter from "./routes/courseRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import connectCloudinary from "./config/cloudinary.js";
-import { stripeWebhooks } from "./utils/strip.js";
 
 const app = express();
 
@@ -43,4 +42,4 @@ connectDB()
     console.error("DB Connection Failed: ", err);
   });
 
-await connectCloudinary();
+connectCloudinary();

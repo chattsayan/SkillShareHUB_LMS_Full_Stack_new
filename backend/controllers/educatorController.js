@@ -15,15 +15,12 @@ export const updateRoleToEducator = async (req, res) => {
     }
 
     const userId = req.auth.userId;
-    console.log("Updating role for user:", userId);
 
     const updatedUser = await clerkClient.users.updateUser(userId, {
       publicMetadata: {
         role: "educator",
       },
     });
-
-    console.log("User updated successfully:", updatedUser);
 
     res.json({
       success: true,

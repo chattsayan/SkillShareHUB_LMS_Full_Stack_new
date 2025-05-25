@@ -3,14 +3,19 @@ import { dummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration";
 import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
   const [allCourses, setAllCourses] = useState([]);
-  const [isInstructor, setIsInstructor] = useState(true);
+  const [isEducator, setIsEducator] = useState(true);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [userData, setUserData] = useState(null);
+
   const currency = import.meta.env.VITE_CURRENCY;
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
 
   const { getToken } = useAuth();
@@ -18,19 +23,54 @@ export const AppContextProvider = ({ children }) => {
 
   // Fetch all courses
   const fetchAllCourses = async () => {
-    setAllCourses(dummyCourses);
+    try {
+      const { data } = await axios.get(`${backendURL}/api/course/all`);
+      if (data.success) {
+        setAllCourses(data.courses);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching all courses:", error || error.message);
+      toast.error("Failed to fetch all courses");
+    }
+  };
+
+  // Fetch User Data
+  const fetchUserData = async () => {
+    if (user.publicMetadata.role === "educator") {
+      setIsEducator(true);
+    }
+
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(`${backendURL}/api/user/data`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (data.success) {
+        setUserData(data.user);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error || error.message);
+      toast.error("Failed to fetch user data");
+    }
   };
 
   // function to calculate avg rating of course
   const calculateAvgRating = (course) => {
-    if (course.courseRatings.length === 0) return 0;
+    if (!course?.courseRatings || course.courseRatings.length === 0) return 0;
 
     let totalRating = 0;
     course.courseRatings.forEach((rating) => {
       totalRating += rating.rating;
     });
 
-    return totalRating / course.courseRatings.length;
+    return Math.floor(totalRating / course.courseRatings.length);
   };
 
   // function to calculate course chapter time
@@ -66,22 +106,40 @@ export const AppContextProvider = ({ children }) => {
 
   // fetch user enrolled courses
   const fetchUserEnrolledCourses = async () => {
-    // This function would typically make an API call to fetch enrolled courses
-    // For now, we will use dummy data
-    setEnrolledCourses(dummyCourses);
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(
+        `${backendURL}/api/user/enrolled-courses`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        setEnrolledCourses(data.enrolledCourses.reverse());
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching enrolled course data:",
+        error || error.message
+      );
+      toast.error("Failed to fetch enrolled course data");
+    }
   };
 
   useEffect(() => {
     fetchAllCourses();
-    fetchUserEnrolledCourses();
   }, []);
 
-  const logToken = async () => {
-    console.log(await getToken());
-  };
-
   useEffect(() => {
-    if (user) logToken();
+    if (user) {
+      fetchUserData();
+      fetchUserEnrolledCourses();
+    }
   }, [user]);
 
   const value = {
@@ -89,13 +147,18 @@ export const AppContextProvider = ({ children }) => {
     allCourses,
     navigate,
     calculateAvgRating,
-    isInstructor,
-    setIsInstructor,
+    isEducator,
+    setIsEducator,
     calculateNoOfLectures,
     calculateChapterTime,
     calculateCourseDuration,
     enrolledCourses,
     fetchUserEnrolledCourses,
+    backendURL,
+    userData,
+    setUserData,
+    getToken,
+    fetchAllCourses,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

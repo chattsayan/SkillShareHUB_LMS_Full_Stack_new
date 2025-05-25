@@ -2,13 +2,45 @@ import { Link } from "react-router-dom";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
 import { useContext } from "react";
 import { AppContext } from "../../utils/AppContext";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const isCourseListPage = location.pathname.includes("/course-list");
 
   const { openSignIn } = useClerk();
   const { user } = useUser();
-  const { navigate, isInstructor } = useContext(AppContext);
+  const { navigate, isEducator, backendURL, setIsEducator, getToken } =
+    useContext(AppContext);
+
+  const becomeEducator = async () => {
+    try {
+      if (isEducator) {
+        navigate("/educator");
+        return;
+      }
+
+      const token = await getToken();
+      const { data } = await axios.get(
+        `${backendURL}/api/educator/update-role`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        setIsEducator(true);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error while setting role:", error || error.message);
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div
@@ -26,14 +58,10 @@ const Navbar = () => {
         <div className="flex items-center gap-5">
           {user && (
             <>
-              <button
-                onClick={() => {
-                  navigate("/educator");
-                }}
-              >
-                {isInstructor ? "Instructor Dashboard" : "Become Instructor"}
+              <button onClick={() => becomeEducator()}>
+                {isEducator ? "Educator Dashboard" : "Become Educator"}
               </button>{" "}
-              | <Link to="/my-learnings">My Learnings</Link>
+              | <Link to="/my-enrollments">My Learnings</Link>
             </>
           )}
         </div>
@@ -55,10 +83,10 @@ const Navbar = () => {
         <div className="flex items-center gap-1 sm:gap-2 max-sm:text-xs">
           {user && (
             <>
-              <button>
-                {isInstructor ? "Instructor Dashboard" : "Become Instructor"}
+              <button onClick={() => becomeEducator()}>
+                {isEducator ? "Educator Dashboard" : "Become Educator"}
               </button>{" "}
-              | <Link to="/my-learnings">My Learnings</Link>
+              | <Link to="/my-enrollments">My Learnings</Link>
             </>
           )}
         </div>

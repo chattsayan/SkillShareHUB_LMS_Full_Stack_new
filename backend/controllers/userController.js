@@ -29,12 +29,36 @@ export const getUserData = async (req, res) => {
 // user enrolled courses with lectures link
 export const userEnrolledCourses = async (req, res) => {
   try {
-    const userId = req.auth.userId;
-    const user = await User.findById(userId).populate("enrolledCourses");
+    const userId = req.auth?.userId;
 
-    res
-      .status(200)
-      .json({ success: true, enrolledCourses: user.enrolledCourses });
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    await user.populate({
+      path: "enrolledCourses",
+      populate: {
+        path: "educator",
+        select: "name imageUrl",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      enrolledCourses: user.enrolledCourses || [],
+    });
   } catch (error) {
     console.error("Error fetching users enrolled courses:", error);
     res.status(500).json({
@@ -94,6 +118,8 @@ export const purchaseCourse = async (req, res) => {
       mode: "payment",
       metadata: {
         purchaseId: newPurchase._id.toString(),
+        userId: userId,
+        courseId: courseId
       },
     });
 
@@ -152,7 +178,7 @@ export const updateUserCourseProgress = async (req, res) => {
 export const getUserCourseProgress = async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const { courseId } = req.body;
+    const { courseId } = req.params;
     const progressData = await CourseProgress.findOne({ userId, courseId });
 
     res.status(200).json({

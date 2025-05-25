@@ -4,7 +4,7 @@ import { assets } from "../../assets/assets";
 import { NavLink } from "react-router-dom";
 
 const Sidebar = () => {
-  const { isInstructor } = useContext(AppContext);
+  const { isEducator } = useContext(AppContext);
 
   const menuItems = [
     {
@@ -30,7 +30,7 @@ const Sidebar = () => {
   ];
 
   return (
-    isInstructor && (
+    isEducator && (
       <div className="md:w-64 w-16 border-r min-h-screen text-base border-gray-500 py-2 flex flex-col">
         {menuItems.map((item) => (
           <NavLink

@@ -6,10 +6,13 @@ import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import Footer from "../../components/student/Footer";
 import YouTube from "react-youtube";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const CourseDetails = () => {
   const { id } = useParams();
   const [courseData, setCourseData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [openSection, setOpenSection] = useState({});
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [playerData, setPlayerData] = useState(null);
@@ -20,16 +23,76 @@ const CourseDetails = () => {
     calculateChapterTime,
     calculateCourseDuration,
     currency,
+    backendURL,
+    userData,
+    getToken,
   } = useContext(AppContext);
 
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find((course) => course._id === id);
-    setCourseData(findCourse);
+    try {
+      setIsLoading(true);
+      const { data } = await axios.get(`${backendURL}/api/course/${id}`);
+      console.log("Course data response:", data);
+
+      if (data.success) {
+        setCourseData(data.courseData);
+      } else {
+        toast.error(data.message || "Failed to fetch course data");
+      }
+    } catch (error) {
+      console.error("Error fetching course data:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to fetch course data"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const enrollCourse = async () => {
+    try {
+      if (!userData) {
+        return toast.warn("Login to Enroll");
+      }
+
+      if (isAlreadyEnrolled) {
+        return toast.warn("Already Enrolled");
+      }
+
+      const token = await getToken();
+      const { data } = await axios.post(
+        `${backendURL}/api/user/purchase`,
+        { courseId: courseData._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        const { session_url } = data;
+        window.location.replace(session_url);
+      } else {
+        toast.error(data.message || "Failed to initiate purchase");
+      }
+    } catch (error) {
+      console.error("Error enrolling in course:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to enroll in course"
+      );
+    }
   };
 
   useEffect(() => {
     fetchCourseData();
-  }, [allCourses]);
+  }, []);
+
+  useEffect(() => {
+    if (userData && courseData) {
+      setIsAlreadyEnrolled(userData.enrolledCourses?.includes(courseData._id));
+    }
+  }, [userData, courseData]);
 
   const toggleSection = (index) => {
     setOpenSection((prev) => ({
@@ -38,7 +101,19 @@ const CourseDetails = () => {
     }));
   };
 
-  return courseData ? (
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (!courseData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-xl text-gray-600">Course not found</p>
+      </div>
+    );
+  }
+
+  return (
     <>
       <div className="flex md:flex-row flex-column-reverse gap-10 relative items-start justify-between md:px-36 px-8 md:pt-30 pt-20 text-left">
         <div
@@ -76,15 +151,18 @@ const CourseDetails = () => {
               ))}
             </div>
             <p className="text-gray-500">
-              {courseData.courseRatings.length}{" "}
-              {courseData.courseRatings.length > 1 ? "ratings" : "rating"}
+              {courseData.courseRatings?.length}{" "}
+              {courseData.courseRatings?.length > 1 ? "ratings" : "rating"}
             </p>
             <p className="text-gray-500">
-              {courseData.enrolledStudents.length}{" "}
-              {courseData.enrolledStudents.length > 1 ? "students" : "student"}
+              {courseData.enrolledStudents?.length}{" "}
+              {courseData.enrolledStudents?.length > 1 ? "students" : "student"}
             </p>
             <p className="text-gray-500">
-              Course by <span className="text-blue-600 underline">Sayan C</span>
+              Course by{" "}
+              <span className="text-blue-600 underline">
+                {courseData.educator?.name}
+              </span>
             </p>
           </div>
           <div className="pt-8 text-gray-800">
@@ -239,7 +317,10 @@ const CourseDetails = () => {
                 <p className="">{calculateNoOfLectures(courseData)} lessons</p>
               </div>
             </div>
-            <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium">
+            <button
+              onClick={enrollCourse}
+              className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium"
+            >
               {isAlreadyEnrolled ? "Already Enrolled" : "Enroll Now"}
             </button>
 
@@ -260,8 +341,6 @@ const CourseDetails = () => {
       </div>
       <Footer />
     </>
-  ) : (
-    <Loading />
   );
 };
 
