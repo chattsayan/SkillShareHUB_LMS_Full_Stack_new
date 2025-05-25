@@ -36,7 +36,7 @@ export const getCourseById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      course: courseData,
+      courseData,
     });
   } catch (error) {
     console.error("Error fetching course by ID:", error);
