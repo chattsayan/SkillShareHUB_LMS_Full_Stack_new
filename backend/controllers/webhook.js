@@ -3,6 +3,9 @@ import User from "../models/User.js";
 import "dotenv/config";
 
 export const clerkWebhooks = async (req, res) => {
+  console.log("=== WEBHOOK ENDPOINT HIT ===");
+  console.log("Request received at:", new Date().toISOString());
+
   try {
     console.log("Webhook received:", {
       headers: req.headers,
