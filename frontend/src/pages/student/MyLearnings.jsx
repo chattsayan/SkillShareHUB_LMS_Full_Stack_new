@@ -35,6 +35,7 @@ const MyLearnings = () => {
           );
 
           let totalLectures = calculateNoOfLectures(course);
+
           const lectureCompleted = data.progressData
             ? data.progressData.lectureCompleted.length
             : 0;

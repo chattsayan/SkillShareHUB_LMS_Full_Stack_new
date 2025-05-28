@@ -44,13 +44,13 @@ const MyCourses = () => {
                   <td className="px-4 py-3">
                     {currency}{" "}
                     {Math.floor(
-                      course.enrolledStudents.length *
+                      (course.enrolledStudents?.length || 0) *
                         (course.coursePrice -
                           (course.discount * course.coursePrice) / 100)
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {course.enrolledStudents.length}
+                    {course.enrolledStudents?.length || 0}
                   </td>
                   <td className="px-4 py-3">
                     {new Date(course.createdAt).toLocaleDateString()}

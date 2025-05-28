@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 const CourseDetails = () => {
   const { id } = useParams();
   const [courseData, setCourseData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [openSection, setOpenSection] = useState({});
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [playerData, setPlayerData] = useState(null);
@@ -30,7 +29,6 @@ const CourseDetails = () => {
 
   const fetchCourseData = async () => {
     try {
-      setIsLoading(true);
       const { data } = await axios.get(`${backendURL}/api/course/${id}`);
       console.log("Course data response:", data);
 
@@ -44,8 +42,6 @@ const CourseDetails = () => {
       toast.error(
         error.response?.data?.message || "Failed to fetch course data"
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -60,14 +56,11 @@ const CourseDetails = () => {
       }
 
       const token = await getToken();
+
       const { data } = await axios.post(
         `${backendURL}/api/user/purchase`,
         { courseId: courseData._id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.success) {
@@ -101,9 +94,9 @@ const CourseDetails = () => {
     }));
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
   if (!courseData) {
     return (
